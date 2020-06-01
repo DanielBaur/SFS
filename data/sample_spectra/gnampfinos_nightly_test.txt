@@ -1,0 +1,57 @@
+This is file contains a gnampfino spectrum that is automatically processed and forwarded to the SF.py code.
+
+With this human-readable representation one can
+	- either have a look at what the input spectrum looks like
+	- or easily generate arbitrary input spectra by oneself.
+
+A suchlike spectrum has the following form:
+	- It's a list l of n five-tuples t_i.
+	- Each tuple t_i contains the following information:
+		- t_i[0]: number of 'equivalent' events --> This entry has to be an integer greater than 0.
+		- t_i[1]: interaction type --> This entry can either be 'ER' or 'NR'.
+		- t_i[2]: energy deposition --> This entry has to be a (not necessarily integer) number greater than 0.
+		- t_i[3]: electrical drift field --> This entry has to be a (not necessarily integer) number greater than 0.
+		- t_i[4]: event position --> This entry can either have the value '-1' (then each event is generated randomly within the detector) or three comma-separated (not necessarily integer) numbers greater than 0 (these correspond to the x-, y- and z- coordinates of the event in mm).
+
+Below you find an exemplary spectrum:
+#spectrum_gnampfino_test = [
+#	(50, ER, 150, 500, -1),
+#	(50, ER, 200, 500, 2.4,1.2,15.0), <-- Be sure to not separate an explicitly given vertex position by spaces (" ")!
+#	(50, ER, 250, 500, -1),
+#	(15, NR, 200, 500, -1)
+#]
+
+
+spectrum_list = [
+# ERs
+	(100, ER, 1, 50, -1),
+	(100, ER, 2, 50, -1),
+	(100, ER, 5, 50, -1),
+	(100, ER, 10, 50, -1),
+	(100, ER, 20, 50, -1),
+	(100, ER, 50, 50, -1),
+	(100, ER, 100, 50, -1),
+	(100, ER, 200, 50, -1),
+	(100, ER, 500, 50, -1),
+	(100, ER, 1, 100, -1),
+	(100, ER, 2, 100, -1),
+	(100, ER, 5, 100, -1),
+	(100, ER, 10, 100, -1),
+	(100, ER, 20, 100, -1),
+	(100, ER, 50, 100, -1),
+	(100, ER, 100, 100, -1),
+	(100, ER, 200, 100, -1),
+	(100, ER, 500, 100, -1),
+	(100, ER, 1, 500, -1),
+	(100, ER, 2, 500, -1),
+	(100, ER, 5, 500, -1),
+	(100, ER, 10, 500, -1),
+	(100, ER, 20, 500, -1),
+	(100, ER, 50, 500, -1),
+	(100, ER, 100, 500, -1),
+	(100, ER, 200, 500, -1),
+	(100, ER, 500, 500, -1)
+]
+
+
+
