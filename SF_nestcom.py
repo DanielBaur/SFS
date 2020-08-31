@@ -68,59 +68,61 @@ def SF_nestcom_implementdetector(
     path_testNEST_cpp = SF.path_testNEST_cpp
 ):
 
-    ### Initializing
+    # Initializing
     print("#######################################")
     print("SF_nestcom_implementdetector: Initializing.")
-    flag_detectorokay = False
     detectorname = os.path.splitext(os.path.basename(filestring_detector))[0]
 
-    ### saving the <detectorname>.hh file to the dedicated folder within the NEST installation
+    # saving the <detectorname>.hh file to the dedicated folder within the NEST installation
     subprocess.call("cp " +filestring_detector +" " +SF.path_nest_detectors +detectorname +".hh", shell=True)
     print(f"SF_nestcom_implementdetector: copied '{filestring_detector}' into '{SF.path_nest_detectors}'")
 
     ### modifying the 'testNEST.cpp' file and performing a clean re-install
-    try:
-        # reading in the 'testNEST.cpp' file
-        print(f"SF_nestcom_implementdetector: reading in file '{path_testNEST_cpp +testNESTname}'")
-        testnestcpp_file_data_unmodified = []
-        with open(path_testNEST_cpp +testNESTname, 'r') as inputfile:
-            for line in inputfile:
-                testnestcpp_file_data_unmodified.append(line)
-        # modifying the retrieved data
-        print(f"SF_nestcom_implementdetector: modifying data of file '{path_testNEST_cpp +testNESTname}'")
-        testnestcpp_file_data_modified = testnestcpp_file_data_unmodified.copy()
+
+    # reading in the 'testNEST.cpp' file
+    print(f"SF_nestcom_implementdetector: reading in file '{path_testNEST_cpp +testNESTname}'")
+    testnestcpp_file_data_unmodified = []
+    with open(path_testNEST_cpp +testNESTname, 'r') as inputfile:
+        for line in inputfile:
+            testnestcpp_file_data_unmodified.append(line)
+
+    # modifying the retrieved data
+    print(f"SF_nestcom_implementdetector: modifying data of file '{path_testNEST_cpp +testNESTname}'")
+    testnestcpp_file_data_modified = testnestcpp_file_data_unmodified.copy()
+    if SF.flag_nest_version == SF.nest_version_list[0]:
         for i in range(len(testnestcpp_file_data_modified)):
             if i==18:
                 testnestcpp_file_data_modified[i] = '#include "' +detectorname +'.hh"\n'
             if i==29:
                 testnestcpp_file_data_modified[i] = '  ' +detectorname +'* detector = new ' +detectorname +'();\n'
-        # overwriting the 'testNEST.cpp' file
-        print(f"SF_nestcom_implementdetector: editing file '{path_testNEST_cpp +testNESTname}'")
-        with open(path_testNEST_cpp +testNESTname, 'w') as outputfile:
-            for i in testnestcpp_file_data_modified:
-                outputfile.write(i)
-        # performing a clean re-install
-        print(f"SF_nestcom_implementdetector: performing a clean re-install")
-        subprocess.call("(cd " +path_testNEST +"../build && make clean)", shell=True)
-        print(f"SF_nestcom_implementdetector: performed 'make clean'")
-        subprocess.call("(cd " +path_testNEST +"../build && make)", shell=True)
-        print(f"SF_nestcom_implementdetector: performed 'make'")
-        subprocess.call("(cd " +path_testNEST +"../build && make install)", shell=True)
-        print(f"SF_nestcom_implementdetector: performed 'make install'")
-        # setting the returned flag to True
-        flag_detectorokay = True
-    except:
-        print(f"SF_nestcom_implementdetector: ERROR")
-        flag_detectorokay = False
+    elif SF.flag_nest_version == SF.nest_version_list[1]:
+        for i in range(len(testnestcpp_file_data_modified)):
+            if i==18:
+                testnestcpp_file_data_modified[i] = '#include "' +detectorname +'.hh"\n'
+            if i==35:
+                testnestcpp_file_data_modified[i] = '  ' +detectorname +'* detector = new ' +detectorname +'();\n'
 
-    ### End of Program
-    if flag_detectorokay == True:
-        outcome = "success"
-    else:
-        outcome = "fail !!!!!!!!!!!!!!!!!!!!!!!!!"
-    print(f"SF_nestcom_implementdetector: finished ---> {outcome}")
-    print("#######################################\n")
-    return flag_detectorokay
+    # overwriting the 'testNEST.cpp' file
+    print(f"SF_nestcom_implementdetector: editing file '{path_testNEST_cpp +testNESTname}'")
+    with open(path_testNEST_cpp +testNESTname, 'w') as outputfile:
+        for i in testnestcpp_file_data_modified:
+            outputfile.write(i)
+
+    # performing a clean re-install
+    if SF.flag_nest_version == SF.nest_version_list[0]:
+        build_path_add = ""
+    elif SF.flag_nest_version == SF.nest_version_list[1]:
+        build_path_add = "../"
+    print(f"SF_nestcom_implementdetector: performing a clean re-install")
+    subprocess.call("(cd " +path_testNEST +build_path_add +"../build && make clean)", shell=True)
+    print(f"SF_nestcom_implementdetector: performed 'make clean'")
+    subprocess.call("(cd " +path_testNEST +build_path_add +"../build && make)", shell=True)
+    print(f"SF_nestcom_implementdetector: performed 'make'")
+    subprocess.call("(cd " +path_testNEST +build_path_add +"../build && make install)", shell=True)
+    print(f"SF_nestcom_implementdetector: performed 'make install'")
+
+    # End of Program
+    return
 
 
 # This is one of the SF_nestcom main functions.
@@ -164,7 +166,6 @@ def SF_nestcom_runnest(
     spectrum_ndarray = np.load(path_inputspectrum +spectrumname +".npy")
 
     ### Running NEST and Processing the Output
-    #try:
     ### Looping Over the Spectrum ndarray and running NEST for every sublist of the spectrum ndarray
     ### The NEST output is forwarded to a (temporary) file called 'NEST_output.txt' stored in './temp/'.
     ### Out of this file ndarray is generated and also saved within './temp/'.
@@ -184,6 +185,8 @@ def SF_nestcom_runnest(
                 if len(row)!=12:
                     continue
                 elif "E_[keV]" in row[0]:
+                    continue
+                elif "field [V/cm]" in row:
                     continue
                 elif "g1" in row[0]:
                     continue

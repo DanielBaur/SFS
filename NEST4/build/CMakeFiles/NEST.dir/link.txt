@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC   -shared -Wl,-soname,libNEST.so -o libNEST.so CMakeFiles/NEST.dir/src/NEST.cpp.o CMakeFiles/NEST.dir/src/RandomGen.cpp.o CMakeFiles/NEST.dir/src/TestSpectra.cpp.o CMakeFiles/NEST.dir/src/VDetector.cpp.o CMakeFiles/NEST.dir/src/testNEST.cpp.o 

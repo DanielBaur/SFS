@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/bareNEST.dir/examples/bareNEST.cpp.o  -o bareNEST libNEST_core.a 

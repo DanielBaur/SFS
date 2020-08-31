@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/daniel/Desktop/arbeitsstuff/SFS/NEST__20200817__v2_1_0/nest/examples/PulseShape.cpp
+algorithm
+-
+cfloat
+-
+iostream
+-
+random
+-
+vector
+-
+

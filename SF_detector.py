@@ -60,7 +60,7 @@ def modify_detector_parameter_in_line(linestring, parameterstring, value):
     valuestring = str(value)
     # if the parameter appears within the linestring do modification stuff
     if parameterstring +" " in linestring:
-        modlinestring = re.sub("\=\s.*\;", "= " +valuestring +";", linestring)
+        modlinestring = re.sub("\=\s.*\;", "= " +valuestring +";//", linestring)
         return modlinestring
     else:
         return linestring
@@ -115,7 +115,7 @@ def gen_detector_dict_from_txt_file(detectorname, folderpath):
 #    SF_detector()
 def gen_detector_hh_file_from_dict(
     detectorname,
-    templatefilestring,
+    templatefilestring = SF.detector_templatefilestring,
     savefolders = [SF.path_input_detectors, SF.path_nest_detectors],
     # Primary Scintillation (S1) parameters
     g1 = 0.073,       		# phd per S1 phot at dtCntr (not phe). Divide out 2-PE effect
@@ -209,23 +209,42 @@ def gen_detector_hh_file_from_dict(
     print(f"SF_detector: modifying the template .hh file.")
     # looping over the entries of 'template_file_data_unmodified' and modifying those
     template_file_data_modified = template_file_data_unmodified.copy()
-    for i in range(len(template_file_data_modified)):
-        if i==12:
-            template_file_data_modified[i] = '#ifndef ' +detectorname +'_hh\n'
-        if i==13:
-            template_file_data_modified[i] = '#define ' +detectorname +'_hh 1\n'
-        if i==19:
-            template_file_data_modified[i] = 'class ' +detectorname +' : public VDetector {\n'
-        if i==21:
-            template_file_data_modified[i] = '  ' +detectorname +'() {\n'
-        if i==23:
-            template_file_data_modified[i] = '    cerr << "You are currently using the ' +detectorname +' detector."\n'
-        if i==30:
-            template_file_data_modified[i] = '  virtual ~' +detectorname +'(){};\n'
-        elif i>35 and i<90:
-            for key,val in dict_parameters.items():
-                if "    " +key +" =" in template_file_data_modified[i]:  # each line has to be checked for the string '"    " +key +" ="' because otherwise some of the parameters would be found multiple times within the file
-                    template_file_data_modified[i] = modify_detector_parameter_in_line(linestring=template_file_data_modified[i], parameterstring=key, value=val)
+    if SF.flag_nest_version == SF.nest_version_list[0]:
+        for i in range(len(template_file_data_modified)):
+            if i==12:
+                template_file_data_modified[i] = '#ifndef ' +detectorname +'_hh\n'
+            if i==13:
+                template_file_data_modified[i] = '#define ' +detectorname +'_hh 1\n'
+            if i==19:
+                template_file_data_modified[i] = 'class ' +detectorname +' : public VDetector {\n'
+            if i==21:
+                template_file_data_modified[i] = '  ' +detectorname +'() {\n'
+            if i==23:
+                template_file_data_modified[i] = '    cerr << "You are currently using the ' +detectorname +' detector."\n'
+            if i==30:
+                template_file_data_modified[i] = '  virtual ~' +detectorname +'(){};\n'
+            elif i>35 and i<90:
+                for key,val in dict_parameters.items():
+                    if "    " +key +" =" in template_file_data_modified[i]:  # each line has to be checked for the string '"    " +key +" ="' because otherwise some of the parameters would be found multiple times within the file
+                        template_file_data_modified[i] = modify_detector_parameter_in_line(linestring=template_file_data_modified[i], parameterstring=key, value=val)
+    elif SF.flag_nest_version == SF.nest_version_list[1]:
+        for i in range(len(template_file_data_modified)):
+            if i==1:
+                template_file_data_modified[i] = '#ifndef ' +detectorname +'_hh\n'
+            if i==2:
+                template_file_data_modified[i] = '#define ' +detectorname +'_hh 1\n'
+            if i==11:
+                template_file_data_modified[i] = 'class ' +detectorname +' : public VDetector {\n'
+            if i==15:
+                template_file_data_modified[i] = '  ' +detectorname +'() {\n'
+            if i==17:
+                template_file_data_modified[i] = '    cerr << "You are currently using the ' +detectorname +' detector.";\n'
+            if i==22:
+                template_file_data_modified[i] = '  virtual ~' +detectorname +'(){};\n'
+            elif i>26 and i<75:
+                for key,val in dict_parameters.items():
+                    if "    " +key +" =" in template_file_data_modified[i]:  # each line has to be checked for the string '"    " +key +" ="' because otherwise some of the parameters would be found multiple times within the file
+                        template_file_data_modified[i] = modify_detector_parameter_in_line(linestring=template_file_data_modified[i], parameterstring=key, value=val)
 
     ### saving the <detectorname>.hh File to the folders specified within the 'savefolders' input parameter.
     for pathstring in savefolders:
@@ -315,7 +334,13 @@ def print_detector_parameters(input_string="jfk", input_string_format="default_p
 #    Its value is True if everything was generated correctly and False if an error occurred.
 # NOTE:
 #    Daniel, you still wanted to implement a 'force' option.
-def SF_detector(detectorname, path_nestdetectors, path_sfsdetectors, templatefilename, force=False):#, file_detectortemplate, flag_force=False):
+def SF_detector(
+    detectorname,
+    path_nestdetectors,
+    path_sfsdetectors,
+    templatefilename,
+    force=False
+):#, file_detectortemplate, flag_force=False):
 
     ### Initializing
     print("#######################################")

@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/bareNEST.dir/bareNEST.cpp.o  -o bareNEST ../libCore.a 

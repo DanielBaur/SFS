@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/testNEST.dir/src/testNEST.cpp.o  -o testNEST libCore.a 
