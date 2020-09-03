@@ -34,58 +34,59 @@ class eLife_us_1000_g1_0_25 : public VDetector {
   // function of time
   virtual void Initialization() {
     // Primary Scintillation (S1) parameters
-    g1 = 0.25;  // phd per S1 phot at dtCntr (not phe). Divide out 2-PE effect
-    sPEres = 0.38;   // single phe resolution (Gaussian assumed)
-    sPEthr = 0.35;   // POD threshold in phe, usually used IN PLACE of sPEeff
-    sPEeff = 0.9;   // actual efficiency, can be used in lieu of POD threshold
-    noise[0] = 0.0;  // baseline noise mean and width in PE (Gaussian)
-    noise[1] = 0.0;  // baseline noise mean and width in PE (Gaussian)
-    P_dphe = 0.22;  // chance 1 photon makes 2 phe instead of 1 in Hamamatsu PMT
+    g1 = 0.25;//  // phd per S1 phot at dtCntr (not phe). Divide out 2-PE effect
+    sPEres = 0.38;//   // single phe resolution (Gaussian assumed)
+    sPEthr = 0.35;//   // POD threshold in phe, usually used IN PLACE of sPEeff
+    sPEeff = 0.9;//   // actual efficiency, can be used in lieu of POD threshold
+    noise[0] = 0.0;//  // baseline noise mean and width in PE (Gaussian)
+    noise[1] = 0.0;//  // baseline noise mean and width in PE (Gaussian)
+    P_dphe = 0.22;//  // chance 1 photon makes 2 phe instead of 1 in Hamamatsu PMT
 
-    coinWind = 100;  // S1 coincidence window in ns
-    coinLevel = 3;   // how many PMTs have to fire for an S1 to count
-    numPMTs = 494;    // For coincidence calculation
+    coinWind = 100;//  // S1 coincidence window in ns
+    coinLevel = 3;//   // how many PMTs have to fire for an S1 to count
+    numPMTs = 494;//    // For coincidence calculation
 
     //"Linear noise" terms as defined in Dahl thesis and by D. McK
-    noise[2] = 0.03;  // S1 -> S1 Gaussian-smeared with noise[2]*S1
-    noise[3] = 0.03;  // S2 -> S2 Gaussian-smeared with noise[3]*S2
+    extraPhot=false;  // for matching EXO-200's W measurement
+    noise[2] = 0.03;//  // S1 -> S1 Gaussian-smeared with noise[2]*S1
+    noise[3] = 0.03;//  // S2 -> S2 Gaussian-smeared with noise[3]*S2
 
     // Ionization and Secondary Scintillation (S2) parameters
-    g1_gas = 0.102;  // phd per S2 photon in gas, used to get SE size
-    s2Fano = 3.61;   // Fano-like fudge factor for SE width
-    s2_thr = 100.0;  // the S2 threshold in phe or PE, *not* phd. Affects NR most
-    E_gas = 10.85;    // field in kV/cm between liquid/gas border and anode
-    eLife_us = 1000;  // the drift electron mean lifetime in micro-seconds
+    g1_gas = 0.102;//  // phd per S2 photon in gas, used to get SE size
+    s2Fano = 3.61;//   // Fano-like fudge factor for SE width
+    s2_thr = 100.0;//  // the S2 threshold in phe or PE, *not* phd. Affects NR most
+    E_gas = 10.85;//    // field in kV/cm between liquid/gas border and anode
+    eLife_us = 1000;//  // the drift electron mean lifetime in micro-seconds
 
     // Thermodynamic Properties
-    inGas = false;
-    T_Kelvin = 175;  // for liquid drift speed calculation
-    p_bar = 2.0;     // gas pressure in units of bars, it controls S2 size
+    inGas = false;//
+    T_Kelvin = 175;//  // for liquid drift speed calculation
+    p_bar = 2.0;//     // gas pressure in units of bars, it controls S2 size
     // if you are getting warnings about being in gas, lower T and/or raise p
 
     // Data Analysis Parameters and Geometry
-    dtCntr = 822.0;  // center of detector for S1 corrections, in usec.
-    dt_min = 75.8;  // minimum. Top of detector fiducial volume
-    dt_max = 1536.5;  // maximum. Bottom of detector fiducial volume
+    dtCntr = 822.0;//  // center of detector for S1 corrections, in usec.
+    dt_min = 75.8;//  // minimum. Top of detector fiducial volume
+    dt_max = 1536.5;//  // maximum. Bottom of detector fiducial volume
 
-    radius = 1300.0;  // millimeters (fiducial rad)
-    radmax = 1350.0;  // actual physical geo. limit
+    radius = 1300.0;//  // millimeters (fiducial rad)
+    radmax = 1350.0;//  // actual physical geo. limit
 
-    TopDrift = 3005.0;  // mm not cm or us (but, this *is* where dt=0)
+    TopDrift = 3005.0;//  // mm not cm or us (but, this *is* where dt=0)
     // a z-axis value of 0 means the bottom of the detector (cathode OR bottom
     // PMTs)
     // In 2-phase, TopDrift=liquid/gas border. In gas detector it's GATE, not
     // anode!
-    anode = 3012.5;  // the level of the anode grid-wire plane in mm
+    anode = 3012.5;//  // the level of the anode grid-wire plane in mm
     // In a gas TPC, this is not TopDrift (top of drift region), but a few mm
     // above it
-    gate = 3000.0;  // mm. This is where the E-field changes (higher)
+    gate = 3000.0;//  // mm. This is where the E-field changes (higher)
     // in gas detectors, the gate is still the gate, but it's where S2 starts
-    cathode = 250;  // mm. Defines point below which events are gamma-X
+    cathode = 250;//  // mm. Defines point below which events are gamma-X
 
     // 2-D (X & Y) Position Reconstruction
-    PosResExp = 0.015;     // exp increase in pos recon res at hi r, 1/mm
-    PosResBase = 30.0;  // baseline unc in mm, see NEST.cpp for usage
+    PosResExp = 0.015;//     // exp increase in pos recon res at hi r, 1/mm
+    PosResBase = 30.0;//  // baseline unc in mm, see NEST.cpp for usage
   }
 
   // S1 PDE custom fit for function of z
@@ -210,6 +211,7 @@ class eLife_us_1000_g1_0_25 : public VDetector {
   }
   // Vary VDetector parameters through custom functions
   virtual void ExampleFunction() { set_g1(0.0760); }
+  virtual void ExampleFunction2() { set_molarMass(131.); }
 };
 
 #endif

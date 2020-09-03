@@ -81,8 +81,7 @@ public:
     double radius = sqrt(pow(xPos_mm,2.)+pow(yPos_mm,2.));
     double amplitude = 307.9-0.3071*zPos_mm+0.0002257*pow(zPos_mm,2.);
     double shape = 1.1525e-7*sqrt(fabs(zPos_mm-318.84));
-    // return -shape * pow ( radius, 3. ) + amplitude; // commented out by Daniel B. on 2nd September 2020 due to mail from M. Szydagis
-    return 1.0;
+    return -shape * pow ( radius, 3. ) + amplitude;
     
   }
   
@@ -105,7 +104,6 @@ public:
     
     double radius = sqrt(pow(xPos_mm,2.)+pow(yPos_mm,2.));
     
-    /*  // commented out by Daniel B. on 2nd September 2020 due to mail from M. Szydagis
     return // unitless, 1.000 at detector center
     9156.3
        +6.22750*pow(radius,1.)
@@ -115,8 +113,6 @@ public:
       1.6953e-6*pow(radius,5.)+
       5.6513e-9*pow(radius,6.)
     -7.3989e-12*pow(radius,7.);
-    */
-    return 1.0;
     
   }
   

@@ -13,7 +13,7 @@ from matplotlib.ticker import AutoMinorLocator
 import subprocess
 import argparse
 import re
-
+import SF
 
 
 
@@ -334,6 +334,52 @@ def gen_summarized_ndarray(input_folder, ndarray, output_folder):
 ########################################################
 ### ER/NR Discrimination Studies #######################
 ########################################################
+
+
+# This function is used to draw an energy contour line onto a signature data plot in the log(cS2/cS1) vs. cS1/g1 observable space.
+def draw_energy_contour_line(
+    param_e_keV, # in keV
+    param_g1,
+    param_g2,
+    param_w = SF.W,
+    number_of_samples = 150,
+    flag_observable_space = "logcS2cS1_cS1g1"
+):
+    # general stuff
+    param_e = param_e_keV *1000
+    # observable space: log(cS2/cS1) vs. cS1/g1
+    if flag_observable_space == "logcS2cS1_cS1g1":
+        # calculating the data points to be plotted as countour line
+        contour_tuplelist = []
+        contour_dtype = np.dtype([
+            ("s1", np.float64),
+            ("s1_g1", np.float64),
+            ("s2", np.float64),
+            ("log_s2_s1", np.float64)
+        ])
+        max_x_val = param_e/param_w
+        for i in np.linspace(start=0, stop=max_x_val, num=number_of_samples, endpoint=True):
+            s1 = i*param_g1
+            s2 = param_g2*(max_x_val - i)
+            appendtuple = (
+                s1,
+                i,
+                s2,
+                np.log10(s2/s1)
+            )
+            if i != 0 and i != max_x_val:
+                contour_tuplelist.append(appendtuple)
+        contour_data = np.array(contour_tuplelist, contour_dtype)
+        # plotting the contour line
+        plt.plot(
+            contour_data["s1_g1"],
+            contour_data["log_s2_s1"],
+            color="black",
+            linewidth=0.8
+        )
+    # handling exceptions
+    else:
+        raise Exception("wrong 'flag_observable_space'")
 
 
 # This function is used to return the value (as int or float) corresponding to 'parametername' from the 'filename'.

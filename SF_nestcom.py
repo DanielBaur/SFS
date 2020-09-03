@@ -133,7 +133,7 @@ def SF_nestcom_implementdetector(
 #    The the spectrum is passed on to NEST and run.
 #    The output is then saved in the specified folder (typically './output_sf/') and named '<datestring>__<spectrum>__<detector>'.
 # OUTPUT:
-#    The output is a boolean True if everything worked fine. If not, then the output is False.
+#    The output is the g2 value extracted from the output of the testNEST execution.
 def SF_nestcom_runnest(
     filestring_spectrum,
     pathstring_output,
@@ -150,6 +150,7 @@ def SF_nestcom_runnest(
     flag_runnestokay = False
     s1_column_id = 6 # 7 corresponds to the corrected value
     s2_column_id = 10 # 11 corresponds to the corrected value
+    g2_extracted = 0.0
     if flag_use_corrected_s1s2_values == True:
         s1_column_id = 7
         s2_column_id = 11
@@ -182,7 +183,11 @@ def SF_nestcom_runnest(
         with open(temporaryfolder +temporaryfilestring, 'r') as nest_output_txt_file:
             for line in nest_output_txt_file:
                 row = line.strip().split("\t")
-                if len(row)!=12:
+                if "g1" in row[0] and "g2" in row[1]:
+                    i_index = row[1].index("g2 =") +5
+                    f_index = row[1].index("phd") -1
+                    g2_extracted = float(row[1][i_index:f_index])
+                elif len(row)!=12:
                     continue
                 elif "E_[keV]" in row[0]:
                     continue
@@ -220,6 +225,7 @@ def SF_nestcom_runnest(
         if flag_deletetxt == True:
             subprocess.call("rm " +temporaryfolder +temporaryfilestring, shell=True)
         print(f"SF_nestcom_runnest: saved {savestring}")
+
     ### Summarizing all ndarrays Into One Single ndarray
     ### As soon as the loop over the spectrum ndarray is finished, all ndarrays within './temp/' are summarized into one output ndarray.
     ### This ndarray is named <datestring>__<spectrum>__<detector>.npy and stored within './output_sf/'.
@@ -232,25 +238,12 @@ def SF_nestcom_runnest(
     print(f"SF_nestcom_runnest: generated concatenated array {outputstring}")
     np.save(pathstring_output +outputstring +".npy", concatenated_array)
     print(f"SF_nestcom_runnest: saved concatenated array {pathstring_output +outputstring}.npy")
-    # cleaning up
+
+    ### end of program
     if flag_deletetxt == True:
         subprocess.call("rm -r " +temporaryfolder +"*", shell=True)
     print(f"SF_nestcom_runnest: cleaned up {temporaryfolder}")
-    ### Setting the Output Flag
-    flag_runnestokay = True 
-    #except:
-    #    flag_runnestokay = False
-
-    ### End of Program
-    if flag_runnestokay == True:
-        print(f"SF_nestcom_runnest: finished ---> success")
-        print("#######################################\n")
-        return concatenated_array
-    else:
-        outcome = "fail !!!!!!!!!!!!!!!!!!!!!!!!!"
-        print(f"SF_nestcom_runnest: finished ---> fail")
-        print("#######################################\n")
-        return flag_runnestokay
+    return g2_extracted
 
 
 

@@ -53,6 +53,7 @@ if flag_nest_version == nest_version_list[0]:
     detector_templatefilename = "DetectorExample_XENON10.hh"
     detector_templatefilestring = path_testnest +"../nest/include/Detectors/DetectorExample_XENON10.hh"
     path_nest_detectors = path_testnest +"../nest/include/Detectors/"
+    W = 13.7 # eV/quantum, E = W (S1/g1 +S2/g2)
 
 
 elif flag_nest_version == nest_version_list[1]:
@@ -62,6 +63,7 @@ elif flag_nest_version == nest_version_list[1]:
     detector_templatefilename = "LUX_Run03.hh"
     detector_templatefilestring = path_testnest +"../../nest/include/Detectors/LUX_Run03.hh"
     path_nest_detectors = path_testnest +"../../nest/include/Detectors/"
+    W = 13.508 # eV/quantum, E = W (S1/g1 +S2/g2)
 
 else:
     raise Exception("You did not chose a proper NEST installation.\n Check 'SF.py' for details.")

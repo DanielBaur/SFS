@@ -1,6 +1,6 @@
 
-#ifndef DetectorExample_LUX_RUN03_hh
-#define DetectorExample_LUX_RUN03_hh 1
+#ifndef eLife_us_1100_g1_0_14_hh
+#define eLife_us_1100_g1_0_14_hh 1
 
 #include "VDetector.hh"
 using namespace std;
@@ -9,69 +9,69 @@ using namespace std;
 //s2fano 3.6, 0.9; eField in gas 6.25, 6.2; e- life 650, 750 us; fid vol 80-130, 38-305 us; gasGap 4.25, 4.5 mm
 //DISCLAIMER: Slight differences from official published values due to private LUX algorithms
 
-class DetectorExample_LUX_RUN03: public VDetector {
+class eLife_us_1100_g1_0_14 : public VDetector {
   
 public:
   
-  DetectorExample_LUX_RUN03() {
+  eLife_us_1100_g1_0_14() {
     if ( verbosity ) cerr << "*** Detector definition message ***" << endl;
-    if ( verbosity ) cerr << "You are currently using the LUX Run03 template detector." << endl << endl;
+    cerr << "You are currently using the eLife_us_1100_g1_0_14 detector.";
     
     // Call the initialization of all the parameters
     Initialization();
   };
-  virtual ~DetectorExample_LUX_RUN03() {};
+  virtual ~eLife_us_1100_g1_0_14(){};
   
   // Do here the initialization of all the parameters that are not varying as a function of time
   virtual void Initialization() {
     
     // Primary Scintillation (S1) parameters
-    g1 = 0.1170; //0.117+/-0.003 WS,0.115+/-0.005 D-D,0.115+/-0.005 CH3T,0.119+/-0.001 LUXSim
-    sPEres = 0.37; //arXiv:1910.04211
-    sPEthr = (0.3*1.173)/0.915; //arXiv:1910.04211
-    sPEeff = 1.00; //arXiv:1910.04211
+    g1 = 0.14;// //0.117+/-0.003 WS,0.115+/-0.005 D-D,0.115+/-0.005 CH3T,0.119+/-0.001 LUXSim
+    sPEres = 0.38;// //arXiv:1910.04211
+    sPEthr = 0.35;// //arXiv:1910.04211
+    sPEeff = 0.9;// //arXiv:1910.04211
     noiseB[0] =-0.01; //arXiv:1910.04211
     noiseB[1] = 0.08; //arXiv:1910.04211
     noiseB[2] = 0.;
     noiseB[3] = 0.;
-    P_dphe = 0.173; //arXiv:1910.04211
+    P_dphe = 0.22;// //arXiv:1910.04211
     
     coinWind= 100;// 1310.8214
     coinLevel=2;  //1512.03506
-    numPMTs = 119;// 122 minus 3 off
+    numPMTs = 494;//// 122 minus 3 off
     
     extraPhot =false; //default
     noiseL[0]=1.4e-2; //1910.04211 p.12, to match 1610.02076 Fig. 8
     noiseL[1]=5.0e-2; //1910.04211 p.12, to match 1610.02076 Fig. 8
     
     // Ionization and Secondary Scintillation (S2) parameters
-    g1_gas = 0.1016; //0.1 in 1910.04211
-    s2Fano = 2.2; //3.7 in 1910.04211; this matches 1608.05381 better
-    s2_thr = 165.;//(150.*1.173)/0.915; //65-194 pe in 1608.05381
-    E_gas = 6.23; //6.55 in 1910.04211
-    eLife_us = 800.; //p.44 of James Verbus PhD thesis Brown
+    g1_gas = 0.102;// //0.1 in 1910.04211
+    s2Fano = 3.61;// this matches 1608.05381 better
+    s2_thr = 100.0;// //65-194 pe in 1608.05381
+    E_gas = 10.85;// //6.55 in 1910.04211
+    eLife_us = 1100;// //p.44 of James Verbus PhD thesis Brown
     
     // Thermodynamic Properties
-    inGas = false; //duh
-    T_Kelvin = 173.; //1910.04211
-    p_bar = 1.57; //1910.04211
+    inGas = false;// //duh
+    T_Kelvin = 175;// //1910.04211
+    p_bar = 2.0;// //1910.04211
     
     // Data Analysis Parameters and Geometry
-    dtCntr = 160.; //p.61 Dobi thesis UMD, 159 in 1708.02566
-    dt_min = 38.; //1608.05381
-    dt_max = 305.; //1608.05381
+    dtCntr = 822.0;// //p.61 Dobi thesis UMD, 159 in 1708.02566
+    dt_min = 75.8;// //1608.05381
+    dt_max = 1536.5;// //1608.05381
     
-    radius = 200.; //1512.03506
-    radmax = 235.; //1910.04211
+    radius = 1300.0;// //1512.03506
+    radmax = 1350.0;// //1910.04211
     
-    TopDrift = 544.8; //544.95 in 1910.04211
-    anode = 549.2; //1910.04211 and 549 in 1708.02566
-    gate = 539.2; //1910.04211 and 539 in 1708.02566
-    cathode = 55.90; //55.9-56 in 1910.04211,1708.02566
+    TopDrift = 3005.0;// //544.95 in 1910.04211
+    anode = 3012.5;// //1910.04211 and 549 in 1708.02566
+    gate = 3000.0;// //1910.04211 and 539 in 1708.02566
+    cathode = 250;// //55.9-56 in 1910.04211,1708.02566
     
     // 2-D (X & Y) Position Reconstruction
-    PosResExp = 0.015; //arXiv:1710.02752 indirectly
-    PosResBase = 70.8364; //1710.02752 indirectly
+    PosResExp = 0.015;// //arXiv:1710.02752 indirectly
+    PosResBase = 30.0;// //1710.02752 indirectly
   }
   
   // S1 PDE custom fit for function of xyz
