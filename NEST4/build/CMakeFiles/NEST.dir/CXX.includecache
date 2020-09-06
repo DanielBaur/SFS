@@ -10,7 +10,7 @@
 vector
 -
 
-/home/daniel/Desktop/arbeitsstuff/20180706__sfs/NEST4/nest/include/Detectors/eLife_us_1300_g1_0_16.hh
+/home/daniel/Desktop/arbeitsstuff/20180706__sfs/NEST4/nest/include/Detectors/eLife_us_2000_g1_0_16.hh
 VDetector.hh
 /home/daniel/Desktop/arbeitsstuff/20180706__sfs/NEST4/nest/include/Detectors/VDetector.hh
 
@@ -99,6 +99,6 @@ analysis.hh
 /home/daniel/Desktop/arbeitsstuff/20180706__sfs/NEST4/nest/src/analysis.hh
 testNEST.hh
 /home/daniel/Desktop/arbeitsstuff/20180706__sfs/NEST4/nest/src/testNEST.hh
-eLife_us_1300_g1_0_16.hh
-/home/daniel/Desktop/arbeitsstuff/20180706__sfs/NEST4/nest/src/eLife_us_1300_g1_0_16.hh
+eLife_us_2000_g1_0_16.hh
+/home/daniel/Desktop/arbeitsstuff/20180706__sfs/NEST4/nest/src/eLife_us_2000_g1_0_16.hh
 

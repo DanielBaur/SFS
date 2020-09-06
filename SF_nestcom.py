@@ -196,7 +196,16 @@ def SF_nestcom_runnest(
                 elif "g1" in row[0]:
                     continue
                 else:
-                    nest_output_tuple_list.append((spectrum_ndarray[i][1], np.float64(spectrum_ndarray[i][2]), np.float64(row[1]),  np.uint64(row[4]),  np.uint64(row[5]), np.float64(row[s1_column_id]), np.float64(row[s2_column_id])))  # order of the output per event/line: [interaction_type, E [keV],  field [V
+                    nest_output_tuple_list.append((
+                        spectrum_ndarray[i][1],
+                        np.float64(spectrum_ndarray[i][2]),
+                        np.float64(row[1]),
+                        np.uint64(row[4]),
+                        np.uint64(row[5]),
+                        np.float64(row[s1_column_id]),
+                        np.float64(row[s2_column_id]),
+                        np.float64(np.log10(np.float64(row[s2_column_id])/np.float64(row[s1_column_id])))
+                    ))  # order of the output per event/line: [interaction_type, E [keV],  field [V
                     ## checking whether either the number of primary electrons or photons equals zero
                     #if np.uint64(row[4]) != 0 and np.uint64(row[5]) != 0:
                     #    nest_output_tuple_list.append((spectrum_ndarray[i][1], np.float64(spectrum_ndarray[i][2]), np.float64(row[1]),  np.uint64(row[4]), np.uint64(row[5]), np.float64(row[s1_column_id]), np.float64(row[s2_column_id])))
@@ -219,6 +228,7 @@ def SF_nestcom_runnest(
             ("number_of_electrons", np.uint64),
             ("s1_phe", np.float64),
             ("s2_phe", np.float64),
+            ("log_s2_s1", np.float64),
         ])
         nest_output_ndarray = np.array(nest_output_tuple_list, nest_output_dtype)
         np.save(temporaryfolder +savestring +".npy", nest_output_ndarray)

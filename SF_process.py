@@ -338,48 +338,219 @@ def gen_summarized_ndarray(input_folder, ndarray, output_folder):
 
 # This function is used to draw an energy contour line onto a signature data plot in the log(cS2/cS1) vs. cS1/g1 observable space.
 def draw_energy_contour_line(
+    ax,
     param_e_keV, # in keV
     param_g1,
     param_g2,
     param_w = SF.W,
     number_of_samples = 150,
-    flag_observable_space = "logcS2cS1_cS1g1"
-):
+    fmt_rel_annotation_height_y = 0.04,
+    fmt_color = "#8c8c8b",
+    fmt_linewidth = 0.8,
+    fmt_fontsize = 7,
+    fmt_x_offset = 0.01,
+    flag_annotateenergyval = True):
+
     # general stuff
     param_e = param_e_keV *1000
-    # observable space: log(cS2/cS1) vs. cS1/g1
-    if flag_observable_space == "logcS2cS1_cS1g1":
-        # calculating the data points to be plotted as countour line
-        contour_tuplelist = []
-        contour_dtype = np.dtype([
-            ("s1", np.float64),
-            ("s1_g1", np.float64),
-            ("s2", np.float64),
-            ("log_s2_s1", np.float64)
-        ])
-        max_x_val = param_e/param_w
-        for i in np.linspace(start=0, stop=max_x_val, num=number_of_samples, endpoint=True):
-            s1 = i*param_g1
-            s2 = param_g2*(max_x_val - i)
-            appendtuple = (
-                s1,
-                i,
-                s2,
-                np.log10(s2/s1)
-            )
-            if i != 0 and i != max_x_val:
-                contour_tuplelist.append(appendtuple)
-        contour_data = np.array(contour_tuplelist, contour_dtype)
-        # plotting the contour line
-        plt.plot(
-            contour_data["s1_g1"],
-            contour_data["log_s2_s1"],
-            color="black",
-            linewidth=0.8
-        )
-    # handling exceptions
+
+    # calculating the data points to be plotted as countour line
+    contour_tuplelist = []
+    contour_dtype = np.dtype([
+        ("s1", np.float64),
+        ("s1_g1", np.float64),
+        ("s2", np.float64),
+        ("log_s2_s1", np.float64)])
+    max_x_val = param_e/param_w
+    for i in np.linspace(start=0, stop=max_x_val, num=number_of_samples, endpoint=True):
+        s1 = i*param_g1
+        s2 = param_g2*(max_x_val - i)
+        appendtuple = (
+            s1,
+            i,
+            s2,
+            np.log10(s2/s1))
+        if i != 0 and i != max_x_val:
+            contour_tuplelist.append(appendtuple)
+    contour_data = np.array(contour_tuplelist, contour_dtype)
+
+    # plotting the contour line
+    plt.plot(
+        contour_data["s1_g1"],
+        contour_data["log_s2_s1"],
+        color = fmt_color,
+        linewidth = fmt_linewidth)
+    
+    # annotating the energy value
+    x_axis_limits = plt.gca().get_xlim() # retrieving the x-axis boundaries
+    y_axis_limits = plt.gca().get_ylim() # retrieving the y-axis boundaries
+    approximate_y_val = y_axis_limits[0] +fmt_rel_annotation_height_y*(y_axis_limits[1]-y_axis_limits[0]) # calculating a y-axis value that is corresponds to a fraction of 'fmt_rel_annotation_height' times the  whole y-axis scale
+    best_y_val = [np.sqrt((contour_data["log_s2_s1"][i]-approximate_y_val)**2) for i in range(len(contour_data))] # determining the value from 'contour_data["log_s2_s1"]' that deviates the least from the one defined above
+    min_dev_index = best_y_val.index(np.min(best_y_val)) # determining the index of the value defined above
+    extracted_x_val = contour_data["s1_g1"][min_dev_index] # extract the corresponding x, i.e. 's1/g1', value
+    fmt_rel_annotation_height_x = (extracted_x_val-x_axis_limits[0])/(x_axis_limits[1]-x_axis_limits[0]) # converting the absolute x value to a relative one
+    if flag_annotateenergyval == True:
+        plt.text(
+            y = fmt_rel_annotation_height_y,
+            x = fmt_rel_annotation_height_x +fmt_x_offset,
+            transform = ax1.transAxes,
+            s =  r"$" +f"{param_e_keV:.1f}" +r"\,\mathrm{keV_{ee}}$",
+            color = fmt_color,
+            fontsize = fmt_fontsize,
+            verticalalignment = 'center',
+            horizontalalignment = 'left')
+
+    return
+
+
+# This function is used to extract discrimination data from simulated input ER and NR signatures.
+# I.e. the input signatures are sliced into bins (according to 'flag_slicing') and every subset of data is then analyzed in terms of leakage.
+def get_discrdata_from_simdata(
+    input_er_data,
+    input_nr_data,
+    bin_edges,
+    threshold_events_per_bin = 20,
+    nr_acceptances = [50, 85], # former: leakage_fraction_percentile
+    savestring = "",
+    flag_slicing = ["s1_g1", "er_ee"][1],
+    flag_returnsubdatasets = True,
+    **kwargs
+):
+
+    # definitions
+    # bins
+    bin_width = bin_edges[1] -bin_edges[0]
+    bin_centers = [bin_edges[i] +0.5*(bin_edges[i+1] -bin_edges[i]) for i in range(len(bin_edges)-1)]
+    # output data
+    popdata_dtype = [
+        ("bin_center", np.float64)]
+    for i in range(len(nr_acceptances)):
+        nracc_add_string = "nracc_" +f"{nr_acceptances[i]:.1f}".replace(".","_") +"__"
+        popdata_dtype = popdata_dtype +[
+            (nracc_add_string +"threshold_value", np.float64),
+            (nracc_add_string +"discriminationline_x_left", np.float64),
+            (nracc_add_string +"discriminationline_x_right", np.float64),
+            (nracc_add_string +"n_nr_events_in_bin", np.uint64),
+            (nracc_add_string +"n_er_events_in_bin", np.uint64),
+            (nracc_add_string +"n_er_events_below_threshold", np.uint64),
+            (nracc_add_string +"leakage_fraction_in_bin", np.float64),
+            (nracc_add_string +"leakage_fraction_in_bin_error", np.float64)]
+    popdata_tuple_list = []
+    sliced_data_er = []
+    sliced_data_nr = []
+
+    # looping over the bins/slices to generate 'popdata' data and add it to the 'popdata_tuple_list'
+    for j in range(len(bin_edges)-1):
+
+        # selecting the data corresponding to the current bin/slice
+        if flag_slicing == "er_ee":
+            er_bin_data = input_er_data[
+                (input_er_data["s2_phe"] >= ((kwargs["g2"]/kwargs["w"])*bin_edges[j]*1000) -((kwargs["g2"]/kwargs["g1"])*input_er_data["s1_phe"]) ) &
+                (input_er_data["s2_phe"] <= ((kwargs["g2"]/kwargs["w"])*bin_edges[j+1]*1000) -((kwargs["g2"]/kwargs["g1"])*input_er_data["s1_phe"]))]
+            nr_bin_data = input_nr_data[
+                (input_nr_data["s2_phe"] >= ((kwargs["g2"]/kwargs["w"])*bin_edges[j]*1000) -((kwargs["g2"]/kwargs["g1"])*input_nr_data["s1_phe"]) ) &
+                (input_nr_data["s2_phe"] <= ((kwargs["g2"]/kwargs["w"])*bin_edges[j+1]*1000) -((kwargs["g2"]/kwargs["g1"])*input_nr_data["s1_phe"]))]
+        elif flag_slicing == "s1_g1": # this I still need to implement
+            er_bin_data = input_er_data
+            nr_bin_data = input_nr_data
+        else:
+            raise Exception("undefined 'flag_slicing'")
+            
+        # extracting data from to the current bin/slice
+        n_nr = len(nr_bin_data) # <--- popdata: "n_nr_events_in_bin"
+        n_er = len(er_bin_data) # <--- popdata: "n_er_events_in_bin"
+
+        # checking whether there are sufficient events within the current bin/slice
+        if (n_er > threshold_events_per_bin) and (n_nr > threshold_events_per_bin):
+
+            # looping over all NR acceptances
+            popdata_tuple = (bin_edges[j]+0.5*bin_width, )
+            for k in range(len(nr_acceptances)):
+
+                # calculating the leakage beneath the threshold
+                percentile_index = int(len(nr_bin_data)*(nr_acceptances[k]/100)) # number of events for an NR acceptance of 'nr_acceptances[k]'
+                percentile_threshold_value = sorted(list(nr_bin_data["log_s2_s1"]))[percentile_index] # 'log_s2_s1' value corresponding to the NR acceptance defined above
+                n_er_below_threshold = len(er_bin_data[(er_bin_data["log_s2_s1"] <= percentile_threshold_value)]) # <--- popdata: "n_er_events_below_threshold"
+                leakage_fraction_within_current_bin = n_er_below_threshold/n_er # <--- popdata: "leakage_fraction_in_bin"
+                leakage_fraction_within_current_bin_error = np.sqrt(n_er_below_threshold)/n_er # <--- popdata: "leakage_fraction_in_bin_error"
+
+                # calculating the x values of the discrimination line for the log_s2_s1 over s1_g1 observable space
+                if flag_slicing == "er_ee":
+                    c_star = 10**(percentile_threshold_value)
+                    first_factor_low = (1/c_star) *(kwargs["g2"]/(kwargs["w"]*kwargs["g1"])) *bin_edges[j]*1000
+                    first_factor_high = (1/c_star) *(kwargs["g2"]/(kwargs["w"]*kwargs["g1"])) *bin_edges[j+1]*1000
+                    second_factor = 1/(1 +(1/c_star)*(kwargs["g2"]/kwargs["g1"]))
+                    discrline_x_left = first_factor_low *second_factor
+                    discrline_x_right = first_factor_high *second_factor
+                elif flag_slicing == "s1_g1":
+                    a = 3
+                else:
+                    raise Exception("invalid 'flag_slicing'")
+
+                # adding data to the 'popdata_tuple'
+                popdata_tuple = popdata_tuple +(
+                    percentile_threshold_value,
+                    discrline_x_left,
+                    discrline_x_right,
+                    n_nr,
+                    n_er,
+                    n_er_below_threshold,
+                    leakage_fraction_within_current_bin,
+                    leakage_fraction_within_current_bin_error)
+
+            # adding data to the 'popdata_tuple_list'
+            popdata_tuple_list.append(popdata_tuple)
+
+        # saving the subdatasets
+        if flag_returnsubdatasets == True:
+            sliced_data_nr.append(nr_bin_data)
+            sliced_data_er.append(er_bin_data)
+
+    # generating the output 'popdata' ndarray
+    popdata_ndarray = np.array(popdata_tuple_list, popdata_dtype)
+    if savestring != "":
+        np.save(savestring, popdata_ndarray)
+
+    # end of program: returning stuff
+    if flag_returnsubdatasets == True:
+        return popdata_ndarray, sliced_data_nr, sliced_data_er
     else:
-        raise Exception("wrong 'flag_observable_space'")
+        return popdata_ndarray
+
+
+# This function is used to calculate the total rejection for a given set of popdata.
+def calc_total_rejection_from_simdata(
+    input_popdata,
+    nr_acceptance,
+    flag_definition = [
+        "total_number_of_ers_above_discrimination_line",
+        "number_of_ers_above_discrimination_line_weighted_by_nrs_in_bin"]
+        [1]):
+    
+    # determining the dataset corresponding to the given NR acceptance
+    nr_acc_addstring = "nracc_" +f"{nr_acceptance:.1f}".replace(".","_") +"__"
+
+    # calculating the total ER rejection depending on the given 'flag_definition'
+    total_er_rejection = 0
+
+    if flag_definition == "total_number_of_ers_above_discrimination_line":
+        n_ers_in_total = 0
+        for i in range(len(input_popdata)):
+            n_ers_in_total = n_ers_in_total +input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]
+            total_er_rejection = total_er_rejection +(input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"] -input_popdata[i][nr_acc_addstring +"n_er_events_below_threshold"])
+        total_er_rejection = total_er_rejection/n_ers_in_total *100
+        return total_er_rejection
+        
+    elif flag_definition == "number_of_ers_above_discrimination_line_weighted_by_nrs_in_bin":
+        n_nrs_in_total = 0
+        for i in range(len(input_popdata)):
+            n_nrs_in_total = n_nrs_in_total +input_popdata[i][nr_acc_addstring +"n_nr_events_in_bin"]
+            total_er_rejection = total_er_rejection +((input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]-input_popdata[i][nr_acc_addstring +"n_er_events_below_threshold"])/input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]*input_popdata[i][nr_acc_addstring +"n_nr_events_in_bin"])
+        total_er_rejection = total_er_rejection/n_nrs_in_total *100
+        return total_er_rejection
+
+    else:
+        raise Exception("invalid 'flag_definition'")
 
 
 # This function is used to return the value (as int or float) corresponding to 'parametername' from the 'filename'.
