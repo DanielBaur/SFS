@@ -163,7 +163,6 @@ def SF_nestcom_runnest(
     except:
         pass
     temporaryfolder = "./temp/"
-    outputstring = output_pre_string +"__" +spectrumname +"__" +detectorname
     spectrum_ndarray = np.load(path_inputspectrum +spectrumname +".npy")
 
     ### Running NEST and Processing the Output
@@ -240,6 +239,7 @@ def SF_nestcom_runnest(
     ### As soon as the loop over the spectrum ndarray is finished, all ndarrays within './temp/' are summarized into one output ndarray.
     ### This ndarray is named <datestring>__<spectrum>__<detector>.npy and stored within './output_sf/'.
     ### Afterwards the content of './temp/' deleted.
+    outputstring = output_pre_string +"__" +spectrumname +"__" +detectorname +"__g2_" +str(g2_extracted).replace(".","_")
     print(f"SF_nestcom_runnest: generating {outputstring}.npy")
     ndarray_list = []
     for i in range(len(arraystringlist)):
@@ -253,7 +253,7 @@ def SF_nestcom_runnest(
     if flag_deletetxt == True:
         subprocess.call("rm -r " +temporaryfolder +"*", shell=True)
     print(f"SF_nestcom_runnest: cleaned up {temporaryfolder}")
-    return g2_extracted
+    return pathstring_output +outputstring +".npy"
 
 
 

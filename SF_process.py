@@ -42,6 +42,40 @@ def exponential_float_to_latex(expfloat):
     return output_string
 
 
+# This function is used to either return the name of a file that includes the specified strings or to raise an Exception if the result is ambiguous.
+def search_for_filestring(
+    path, # pathstring (e.g. "/home/daniel/Desktop/arbeitsstuff/") pointing to the folder containing the desired file
+    include_list, # list of strings that must be contained within the desired filename
+    exclude_list = []): # lost of strings that mustn't be contained within the desired filename
+    
+    # defining the 'candidate_list' containing all suitable candidates
+    candidate_list = []
+
+    # looping over all files within the specified directory and checking for the strings specified in 'include_list' and 'exclude_list'
+    for filename in [f for f in os.listdir(path) if os.path.isfile(path +f)]:
+        check_include_list = all([string in filename for string in include_list])
+        check_exclude_list = all([string not in filename for string in exclude_list])
+        if check_include_list == True and check_exclude_list == True:
+            candidate_list.append(filename)
+
+    # returning based on the search result
+    if len(candidate_list) == 1:
+        return path +candidate_list[0]
+    else:
+        a = "Your search was ambiguous:\n"
+        b = "'include_list' = [\n "
+        for i in range(len(include_list)):
+            b = b +f"\t{include_list[i]}\n"
+        c = "'exclude_list' = [\n "
+        for i in range(len(exclude_list)):
+            c = c +f"\t{exclude_list[i]}\n"
+        d = "'candidate_list' = [\n "
+        for i in range(len(candidate_list)):
+            d = d +f"\t{candidate_list[i]}\n"
+        exception_string = a +b +c +d
+        raise Exception(exception_string)
+
+
 
 
 
@@ -393,7 +427,7 @@ def draw_energy_contour_line(
         plt.text(
             y = fmt_rel_annotation_height_y,
             x = fmt_rel_annotation_height_x +fmt_x_offset,
-            transform = ax1.transAxes,
+            transform = ax.transAxes,
             s =  r"$" +f"{param_e_keV:.1f}" +r"\,\mathrm{keV_{ee}}$",
             color = fmt_color,
             fontsize = fmt_fontsize,
@@ -434,7 +468,9 @@ def get_discrdata_from_simdata(
             (nracc_add_string +"n_er_events_in_bin", np.uint64),
             (nracc_add_string +"n_er_events_below_threshold", np.uint64),
             (nracc_add_string +"leakage_fraction_in_bin", np.float64),
-            (nracc_add_string +"leakage_fraction_in_bin_error", np.float64)]
+            (nracc_add_string +"leakage_fraction_in_bin_error", np.float64),
+            (nracc_add_string +"er_rejection_in_bin", np.float64),
+            (nracc_add_string +"er_rejection_in_bin_error", np.float64)]
     popdata_tuple_list = []
     sliced_data_er = []
     sliced_data_nr = []
@@ -473,6 +509,8 @@ def get_discrdata_from_simdata(
                 n_er_below_threshold = len(er_bin_data[(er_bin_data["log_s2_s1"] <= percentile_threshold_value)]) # <--- popdata: "n_er_events_below_threshold"
                 leakage_fraction_within_current_bin = n_er_below_threshold/n_er # <--- popdata: "leakage_fraction_in_bin"
                 leakage_fraction_within_current_bin_error = np.sqrt(n_er_below_threshold)/n_er # <--- popdata: "leakage_fraction_in_bin_error"
+                er_rejection_within_current_bin = (n_er-n_er_below_threshold)/n_er # <--- popdata: "er_rejection_in_bin"
+                er_rejection_within_current_bin_error = np.sqrt(n_er-n_er_below_threshold)/n_er # <--- popdata: "er_rejection_in_bin_error"
 
                 # calculating the x values of the discrimination line for the log_s2_s1 over s1_g1 observable space
                 if flag_slicing == "er_ee":
@@ -496,7 +534,9 @@ def get_discrdata_from_simdata(
                     n_er,
                     n_er_below_threshold,
                     leakage_fraction_within_current_bin,
-                    leakage_fraction_within_current_bin_error)
+                    leakage_fraction_within_current_bin_error,
+                    er_rejection_within_current_bin,
+                    er_rejection_within_current_bin_error)
 
             # adding data to the 'popdata_tuple_list'
             popdata_tuple_list.append(popdata_tuple)
@@ -519,7 +559,7 @@ def get_discrdata_from_simdata(
 
 
 # This function is used to calculate the total rejection for a given set of popdata.
-def calc_total_rejection_from_simdata(
+def calc_total_rejection_from_discrdata(
     input_popdata,
     nr_acceptance,
     flag_definition = [
@@ -531,23 +571,25 @@ def calc_total_rejection_from_simdata(
     nr_acc_addstring = "nracc_" +f"{nr_acceptance:.1f}".replace(".","_") +"__"
 
     # calculating the total ER rejection depending on the given 'flag_definition'
-    total_er_rejection = 0
+    total_ers_rejected = 0
 
     if flag_definition == "total_number_of_ers_above_discrimination_line":
         n_ers_in_total = 0
         for i in range(len(input_popdata)):
             n_ers_in_total = n_ers_in_total +input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]
-            total_er_rejection = total_er_rejection +(input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"] -input_popdata[i][nr_acc_addstring +"n_er_events_below_threshold"])
-        total_er_rejection = total_er_rejection/n_ers_in_total *100
-        return total_er_rejection
+            total_ers_rejected = total_ers_rejected +(input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"] -input_popdata[i][nr_acc_addstring +"n_er_events_below_threshold"])
+        total_er_rejection = total_ers_rejected/n_ers_in_total *100
+        total_er_rejection_error = np.sqrt(total_ers_rejected)/n_ers_in_total *100
+        return total_er_rejection, total_er_rejection_error
         
     elif flag_definition == "number_of_ers_above_discrimination_line_weighted_by_nrs_in_bin":
         n_nrs_in_total = 0
         for i in range(len(input_popdata)):
             n_nrs_in_total = n_nrs_in_total +input_popdata[i][nr_acc_addstring +"n_nr_events_in_bin"]
-            total_er_rejection = total_er_rejection +((input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]-input_popdata[i][nr_acc_addstring +"n_er_events_below_threshold"])/input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]*input_popdata[i][nr_acc_addstring +"n_nr_events_in_bin"])
-        total_er_rejection = total_er_rejection/n_nrs_in_total *100
-        return total_er_rejection
+            total_ers_rejected = total_ers_rejected +((input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]-input_popdata[i][nr_acc_addstring +"n_er_events_below_threshold"])/input_popdata[i][nr_acc_addstring +"n_er_events_in_bin"]*input_popdata[i][nr_acc_addstring +"n_nr_events_in_bin"])
+        total_er_rejection = total_ers_rejected/n_nrs_in_total *100
+        total_er_rejection_error = np.sqrt(total_ers_rejected)/n_nrs_in_total *100
+        return total_er_rejection, total_er_rejection_error
 
     else:
         raise Exception("invalid 'flag_definition'")
@@ -555,19 +597,25 @@ def calc_total_rejection_from_simdata(
 
 # This function is used to return the value (as int or float) corresponding to 'parametername' from the 'filename'.
 # If neither parameter nor value can be found 'False' is returned.
-def get_parameter_val_from_filename(filename, parametername):
-    ### generating a list from the input filename
-    filename_mod = filename.replace("__","_")
+def get_parameter_val_from_filename(filename, parametername, flag_return_filename_dict=False):
+
+    # generating a list from the input filename
+    filename_mod = filename
+    if "/" in filename_mod:
+        filename_mod = filename_mod[filename_mod.rindex("/"):]
+    filename_mod = filename_mod.replace("__","_")
     if "." in filename_mod:
         filename_mod = filename_mod[:filename_mod.index(".")]
     filename_list = list(filename_mod.split("_"))
-    ### converting all strings to ints if possible
+
+    # converting all strings to ints if possible
     for i in range(len(filename_list)):
         try:
             filename_list[i] = int(filename_list[i])
         except:
             pass
-    ### looping over the modified filename list and writing everything into a dictionary
+
+    # looping over the modified filename list and writing everything into a dictionary
     filename_dict = {}
     ctr = 0
     while ctr < len(filename_list):
@@ -584,27 +632,45 @@ def get_parameter_val_from_filename(filename, parametername):
             else:
                 new_key = filename_list[ctr]
                 ctr += 1
+
             # checking for subsequent ints
-            if type(filename_list[ctr]) == int:
-                if (ctr+1) < len(filename_list):
-                    if type(filename_list[ctr+1]) == int:
-                        new_val = float(str(filename_list[ctr]) +"." +str(filename_list[ctr+1]))
-                        ctr += 2
+            if ctr != len(filename_list):
+                if type(filename_list[ctr]) == int: # <------------------
+                    if (ctr+1) < len(filename_list):
+                        if type(filename_list[ctr+1]) == int:
+                            new_val = float(str(filename_list[ctr]) +"." +str(filename_list[ctr+1]))
+                            ctr += 2
+                        else:
+                            new_val = filename_list[ctr]
+                            ctr += 1
                     else:
                         new_val = filename_list[ctr]
                         ctr += 1
-                else:
-                    new_val = filename_list[ctr]
-                    ctr += 1
+
             # updating the dict
             filename_dict.update({new_key : new_val})
         else:
             ctr += 1
+
     ### printing the dict
-    for key, val in filename_dict.items():
-        print(key, val)
+    #for key, val in filename_dict.items():
+    #    print(key, val)
+
     ### returning the parameter value from the dictionary
-    return filename_dict[parametername]
+    if flag_return_filename_dict == True:
+        return filename_dict
+    else:
+        try:
+            return filename_dict[parametername]
+        except:
+            alt_key_list = []
+            for key, val in filename_dict.items():
+                if parametername in key:
+                    alt_key_list.append(key)
+            if len(alt_key_list) == 1:
+                return filename_dict[alt_key_list[0]]
+            else:
+                raise KeyError(parametername)
 
 
 

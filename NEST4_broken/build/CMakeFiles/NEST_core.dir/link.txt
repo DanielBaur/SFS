@@ -1,0 +1,2 @@
+/usr/bin/ar qc libNEST_core.a  CMakeFiles/NEST_core.dir/src/NEST.cpp.o CMakeFiles/NEST_core.dir/src/RandomGen.cpp.o CMakeFiles/NEST_core.dir/src/TestSpectra.cpp.o CMakeFiles/NEST_core.dir/src/VDetector.cpp.o CMakeFiles/NEST_core.dir/src/testNEST.cpp.o
+/usr/bin/ranlib libNEST_core.a
